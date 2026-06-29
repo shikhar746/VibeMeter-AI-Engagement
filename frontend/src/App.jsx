@@ -130,7 +130,7 @@ function App() {
     <div className="app-wrapper">
       <header className="app-header">
         <h1 className="app-title">
-          <span>Deloitte</span>
+          <span>The Company</span>
           People Experience Bot
         </h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -224,7 +224,7 @@ function App() {
         )}
       </div>
 
-      <footer className="app-footer">Deloitte · People & Purpose · Internal Tool</footer>
+      <footer className="app-footer">The Company · People & Purpose · Internal Tool</footer>
 
       {/* ── HR Modal Overlay ──────────────────────────────────── */}
       {showHrModal && (
