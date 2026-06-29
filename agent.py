@@ -1,4 +1,3 @@
-# agent.py
 import os
 from dotenv import load_dotenv
 load_dotenv()
@@ -21,27 +20,22 @@ class ChatState(TypedDict):
     vibe_summary: str
 
 # ---------------------------------------------------------------------------
-# 2. LLM Initialisation (LAZY — not at import time)
+# 2. LLM Initialisation
 # ---------------------------------------------------------------------------
 
-_llm = None
-
 def get_llm():
-    """Initialises the Groq LLM with safety checks (lazy singleton)."""
-    global _llm
-    if _llm is not None:
-        return _llm
-    
+    """Initialises the Groq LLM with safety checks."""
     api_key = os.getenv("GROQ_API_KEY")
     if not api_key:
         raise ValueError("GROQ_API_KEY not found in environment variables.")
     
-    _llm = ChatGroq(
+    return ChatGroq(
         model="llama-3.3-70b-versatile",
         temperature=0.4,
         api_key=api_key,
     )
-    return _llm
+
+llm = get_llm()
 
 # ---------------------------------------------------------------------------
 # 3. Graph Nodes (Business Logic)
@@ -57,7 +51,7 @@ def analyze_and_check_escalation(state: ChatState) -> ChatState:
     ))
     human_prompt = HumanMessage(content=f"Feedback: {latest_msg}")
 
-    response = get_llm().invoke([system_prompt, human_prompt])  # ← lazy call
+    response = llm.invoke([system_prompt, human_prompt])
     is_critical = "YES" in response.content.strip().upper()
 
     return {**state, "escalate_to_hr": state["escalate_to_hr"] or is_critical}
@@ -77,7 +71,7 @@ def generate_bot_reply(state: ChatState) -> ChatState:
         f"Conversation History:\n{history}"
     ))
 
-    response = get_llm().invoke([system_prompt, human_prompt])  # ← lazy call
+    response = llm.invoke([system_prompt, human_prompt])
     bot_msg = f"Bot: {response.content.strip()}"
     
     return {**state, "messages": state["messages"] + [bot_msg]}
