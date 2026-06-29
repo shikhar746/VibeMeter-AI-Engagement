@@ -1,4 +1,6 @@
 import os
+from dotenv import load_dotenv
+load_dotenv()
 from typing import TypedDict, List
 
 from langchain_groq import ChatGroq
