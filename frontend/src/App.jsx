@@ -16,6 +16,7 @@ function App() {
   // ── HR modal state ─────────────────────────────────────────
   const [showHrModal, setShowHrModal] = useState(false);
   const [hrPassword, setHrPassword] = useState("");
+  const [hrToken, setHrToken] = useState("");
   const [hrError, setHrError] = useState("");
   const [isHrLoading, setIsHrLoading] = useState(false);
   const [isHrLoggedIn, setIsHrLoggedIn] = useState(false);
@@ -80,10 +81,12 @@ function App() {
     setIsHrLoading(true);
     setHrError("");
     try {
-      await axios.post(`${API_BASE_URL}/auth/hr/login`, { password: hrPassword });
+      const res = await axios.post(`${API_BASE_URL}/auth/hr/login`, { password: hrPassword });
+      const token = res.data.token;
+      setHrToken(token);
       setIsHrLoggedIn(true);
       setHrPassword("");
-      fetchHrDashboard();
+      fetchHrDashboard(token);
     } catch (error) {
       setHrError(error.response?.data?.detail || "Incorrect password. Please try again.");
     } finally {
@@ -91,10 +94,13 @@ function App() {
     }
   };
 
-  const fetchHrDashboard = async () => {
+  const fetchHrDashboard = async (token) => {
+    const authToken = token || hrToken;
     setIsDashboardLoading(true);
     try {
-      const res = await axios.get(`${API_BASE_URL}/dashboard/employees`);
+      const res = await axios.get(`${API_BASE_URL}/dashboard/employees`, {
+        headers: { "X-HR-Token": authToken }
+      });
       setHrDashboardData(res.data.employees || []);
     } catch {
       setHrError("Failed to load dashboard data.");
@@ -105,6 +111,7 @@ function App() {
 
   const handleHrLogout = () => {
     setIsHrLoggedIn(false);
+    setHrToken("");
     setHrDashboardData([]);
     setHrError("");
     setShowHrModal(false);
@@ -267,7 +274,7 @@ function App() {
                     <p className="hr-modal-subtitle">{hrDashboardData.length} active conversations</p>
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
-                    <button className="hr-refresh-btn" onClick={fetchHrDashboard} title="Refresh">↺</button>
+                    <button className="hr-refresh-btn" onClick={() => fetchHrDashboard()} title="Refresh">↺</button>
                     <button className="hr-modal-close" onClick={handleHrLogout} title="Logout">⏻</button>
                   </div>
                 </div>

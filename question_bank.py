@@ -45,3 +45,13 @@ QUESTION_BANK = {
         "follow_up": "Is there anything specific at work causing you frustration, or just a general feeling of being overwhelmed?"
     }
 }
+
+def get_general_opening(employee_id: str) -> dict:
+    return {
+        "issue": "general",
+        "bot_reply": (
+            f"Hi! I'm TIA, your People Experience assistant. "
+            f"I just wanted to check in and see how things are going for you at work lately. "
+            f"How have you been feeling overall?"
+        ),
+    }
