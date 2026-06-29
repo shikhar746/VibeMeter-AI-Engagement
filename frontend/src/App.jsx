@@ -5,6 +5,7 @@ import './App.css';
 const API_BASE_URL = "http://127.0.0.1:8000";
 
 function App() {
+  // ── Employee chat state ────────────────────────────────────
   const [employeeId, setEmployeeId] = useState("");
   const [isChatActive, setIsChatActive] = useState(false);
   const [messages, setMessages] = useState([]);
@@ -12,10 +13,20 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
 
+  // ── HR modal state ─────────────────────────────────────────
+  const [showHrModal, setShowHrModal] = useState(false);
+  const [hrPassword, setHrPassword] = useState("");
+  const [hrError, setHrError] = useState("");
+  const [isHrLoading, setIsHrLoading] = useState(false);
+  const [isHrLoggedIn, setIsHrLoggedIn] = useState(false);
+  const [hrDashboardData, setHrDashboardData] = useState([]);
+  const [isDashboardLoading, setIsDashboardLoading] = useState(false);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
 
+  // ── Employee handlers ──────────────────────────────────────
   const handleTriggerOutreach = async () => {
     try {
       const res = await axios.get(`${API_BASE_URL}/trigger_outreach`);
@@ -62,6 +73,52 @@ function App() {
     }
   };
 
+  // ── HR handlers ────────────────────────────────────────────
+  const handleHrLogin = async (e) => {
+    e.preventDefault();
+    if (!hrPassword.trim()) return;
+    setIsHrLoading(true);
+    setHrError("");
+    try {
+      await axios.post(`${API_BASE_URL}/auth/hr/login`, { password: hrPassword });
+      setIsHrLoggedIn(true);
+      setHrPassword("");
+      fetchHrDashboard();
+    } catch (error) {
+      setHrError(error.response?.data?.detail || "Incorrect password. Please try again.");
+    } finally {
+      setIsHrLoading(false);
+    }
+  };
+
+  const fetchHrDashboard = async () => {
+    setIsDashboardLoading(true);
+    try {
+      const res = await axios.get(`${API_BASE_URL}/dashboard/employees`);
+      setHrDashboardData(res.data.employees || []);
+    } catch {
+      setHrError("Failed to load dashboard data.");
+    } finally {
+      setIsDashboardLoading(false);
+    }
+  };
+
+  const handleHrLogout = () => {
+    setIsHrLoggedIn(false);
+    setHrDashboardData([]);
+    setHrError("");
+    setShowHrModal(false);
+  };
+
+  const closeHrModal = () => {
+    if (!isHrLoggedIn) {
+      setHrPassword("");
+      setHrError("");
+    }
+    setShowHrModal(false);
+  };
+
+  // ── Render ─────────────────────────────────────────────────
   return (
     <div className="app-wrapper">
       <header className="app-header">
@@ -69,7 +126,16 @@ function App() {
           <span>Deloitte</span>
           People Experience Bot
         </h1>
-        <div className="app-badge">TIA · v2.0</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <button
+            className="hr-login-btn"
+            onClick={() => setShowHrModal(true)}
+            title="HR Portal"
+          >
+            {isHrLoggedIn ? "👔 HR Portal" : "🔒 HR Login"}
+          </button>
+          <div className="app-badge">TIA · v2.0</div>
+        </div>
       </header>
 
       <div className="card">
@@ -152,6 +218,99 @@ function App() {
       </div>
 
       <footer className="app-footer">Deloitte · People & Purpose · Internal Tool</footer>
+
+      {/* ── HR Modal Overlay ──────────────────────────────────── */}
+      {showHrModal && (
+        <div className="hr-modal-overlay" onClick={closeHrModal}>
+          <div className="hr-modal" onClick={(e) => e.stopPropagation()}>
+
+            {!isHrLoggedIn ? (
+              /* Login form */
+              <>
+                <div className="hr-modal-header">
+                  <div className="hr-modal-icon">🔐</div>
+                  <div>
+                    <h2 className="hr-modal-title">HR Portal</h2>
+                    <p className="hr-modal-subtitle">Restricted access · Authorised personnel only</p>
+                  </div>
+                  <button className="hr-modal-close" onClick={closeHrModal}>✕</button>
+                </div>
+
+                <form className="hr-login-form" onSubmit={handleHrLogin}>
+                  <label className="hr-field-label">HR Password</label>
+                  <input
+                    className="hr-password-input"
+                    type="password"
+                    value={hrPassword}
+                    onChange={(e) => setHrPassword(e.target.value)}
+                    placeholder="Enter HR password"
+                    autoFocus
+                    disabled={isHrLoading}
+                  />
+                  {hrError && <p className="hr-error">{hrError}</p>}
+                  <button
+                    className="hr-submit-btn"
+                    type="submit"
+                    disabled={isHrLoading || !hrPassword.trim()}
+                  >
+                    {isHrLoading ? "Verifying…" : "Access Dashboard →"}
+                  </button>
+                </form>
+              </>
+            ) : (
+              /* Dashboard */
+              <>
+                <div className="hr-modal-header">
+                  <div className="hr-modal-icon">📊</div>
+                  <div>
+                    <h2 className="hr-modal-title">Employee Dashboard</h2>
+                    <p className="hr-modal-subtitle">{hrDashboardData.length} active conversations</p>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button className="hr-refresh-btn" onClick={fetchHrDashboard} title="Refresh">↺</button>
+                    <button className="hr-modal-close" onClick={handleHrLogout} title="Logout">⏻</button>
+                  </div>
+                </div>
+
+                {isDashboardLoading ? (
+                  <div className="hr-loading">Loading employee data…</div>
+                ) : hrDashboardData.length === 0 ? (
+                  <div className="hr-empty">No active conversations yet. Employees will appear here once they start chatting.</div>
+                ) : (
+                  <div className="hr-table-wrap">
+                    <table className="hr-table">
+                      <thead>
+                        <tr>
+                          <th>Employee ID</th>
+                          <th>Top SHAP Feature</th>
+                          <th>Status</th>
+                          <th className="issues-col">Issues Raised</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {hrDashboardData.map((row) => (
+                          <tr key={row.employee_id}>
+                            <td className="emp-id-cell">{row.employee_id}</td>
+                            <td className="feature-cell">{row.primary_issue?.replace(/_/g, ' ') || '—'}</td>
+                            <td>
+                              <span className={`status-badge ${row.escalated ? 'escalated' : 'active'}`}>
+                                {row.escalated ? '🚨 Escalated' : '💬 Active'}
+                              </span>
+                            </td>
+                            <td className={`issues-cell ${row.escalated ? 'issues-urgent' : ''}`}>
+                              {row.vibe_summary || 'Conversation in progress…'}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

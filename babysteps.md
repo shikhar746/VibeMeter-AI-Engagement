@@ -1,3 +1,39 @@
+1. Database Integration (MongoDB)
+
+Replace all in-memory Python dictionaries with MongoDB collections.
+
+Create an employees collection to store employee IDs, SHAP values, and engagement data.
+
+Create a conversations collection to persist LangGraph chat states and message histories. Read and write directly to the database without worrying about concurrent locking.
+
+2. Employee Access & Validation
+
+Implement a simple login/entry screen for employees on the frontend.
+
+The system must validate that the entered roll number strictly follows the format EMPXXXX (where X is a digit, e.g., EMP1234). Use regex (e.g., ^EMP\d+$) on both the frontend input and backend route validation.
+
+If the ID is valid, fetch their specific state from the database and initialize/resume the chat.
+
+3. HR Panel & Dashboard
+
+Create a separate HR login route (e.g., /hr/login). For this milestone, use a simple static password check against an environment variable. No complex auth.
+
+Build a React view for the HR Dashboard.
+
+The dashboard must fetch data from the MongoDB backend and display a data table containing all employees who have interacted with the bot.
+
+The table columns should include: Employee ID, Top SHAP Feature (Primary Issue), Chat Status, and a highlighted column showing specific "Issues Raised" (synthesized by the LLM during the chat).
+
+Implementation Rules (Strict):
+Do not write all the code at once. We are going to build this incrementally to ensure everything remains stable.
+
+First, output the complete, updated Directory / File Structure for both the frontend and backend.
+
+Second, break the entire implementation into a numbered list of "Baby Steps" (e.g., Step 1: MongoDB Setup, Step 2: Employee Login Route, etc.).
+
+Wait for my approval on the plan. Once I say "proceed," give me the code for Step 1 ONLY. Do not move to the next step until I confirm Step 1 works.
+
+
 2. Baby Steps Roadmap
 Step 1 — MongoDB Setup
 
