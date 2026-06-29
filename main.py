@@ -11,7 +11,7 @@ from pydantic import BaseModel
 from typing import Optional
 
 from question_bank import QUESTION_BANK, get_general_opening
-from agent import chat_engine, ChatState, llm
+from agent import chat_engine, ChatState, _llm
 import database as db
 
 # ---------------------------------------------------------------------------
@@ -242,7 +242,7 @@ async def chat_with_bot(request: ChatRequest):
             f"Conversation:\n{history}"
         )
         try:
-            summary_res = await run_in_threadpool(llm.invoke, summary_prompt)
+            summary_res = await run_in_threadpool(_llm.invoke, summary_prompt)
             vibe_summary = summary_res.content.strip()
         except Exception as summary_err:
             print(f"⚠️  Vibe summary generation failed: {summary_err}")
@@ -302,7 +302,7 @@ async def generate_daily_report():
                 f"Conversation:\n{history}"
             )
             try:
-                summary_res = await run_in_threadpool(llm.invoke, summary_prompt)
+                summary_res = await run_in_threadpool(_llm.invoke, summary_prompt)
                 insight = summary_res.content.strip()
             except Exception:
                 insight = state.get("vibe_summary") or "Summary unavailable."
