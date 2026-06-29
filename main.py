@@ -195,13 +195,27 @@ async def chat_with_bot(request: ChatRequest):
     try:
         updated_state: ChatState = await run_in_threadpool(chat_engine.invoke, state)
 
-        # Persist updated state back to MongoDB
+        # Generate a fresh vibe summary so the HR dashboard always has current data.
+        # We keep it short — one sentence — so it's cheap to generate every turn.
+        history = "\n".join(updated_state["messages"])
+        summary_prompt = (
+            "In one concise sentence, summarise this employee's main concern and current mood "
+            "based on the conversation so far. Be factual, not speculative.\n\n"
+            f"{history}"
+        )
+        try:
+            summary_res = await run_in_threadpool(llm.invoke, summary_prompt)
+            vibe_summary = summary_res.content.strip()
+        except Exception:
+            vibe_summary = updated_state.get("vibe_summary", "")  # keep previous if LLM fails
+
+        # Persist full updated state to MongoDB
         await db.conversations.update_one(
             {"employee_id": emp_id},
             {"$set": {
                 "messages": updated_state["messages"],
                 "escalate_to_hr": updated_state["escalate_to_hr"],
-                "vibe_summary": updated_state.get("vibe_summary", ""),
+                "vibe_summary": vibe_summary,
             }}
         )
 
