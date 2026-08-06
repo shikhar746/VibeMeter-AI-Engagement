@@ -310,6 +310,30 @@ body {
   letter-spacing: 0.06em;
 }
 
+.close-chat-btn {
+  background: rgba(139, 163, 184, 0.08);
+  border: 1px solid rgba(139, 163, 184, 0.2);
+  color: var(--slate);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+  margin-left: 6px;
+  flex-shrink: 0;
+}
+
+.close-chat-btn:hover {
+  background: rgba(192, 57, 43, 0.2);
+  border-color: rgba(192, 57, 43, 0.4);
+  color: #e88080;
+  transform: scale(1.05);
+}
+
 /* Messages area */
 .messages-area {
   flex: 1;

@@ -1,0 +1,14 @@
+# --- Web Framework & Server ---
+fastapi>=0.115.0
+uvicorn>=0.30.6
+
+# --- Data & Validation ---
+pandas
+pydantic>=2.8.2
+python-dotenv>=1.0.1
+certifi>=2024.0.0
+motor>=3.5.1
+
+# --- AI & LangChain Ecosystem ---
+langchain-groq>=0.1.0
+langgraph>=0.2.0
