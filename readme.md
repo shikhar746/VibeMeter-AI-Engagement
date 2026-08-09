@@ -5,6 +5,13 @@
 
 ---
 
+## 🌐 Live Deployments
+
+- **Frontend Application:** [https://vibemeter-ai-engagement-1.onrender.com](https://vibemeter-ai-engagement-1.onrender.com)
+- **Backend API Service:** [https://vibemeter-ai-engagement-n2r8.onrender.com](https://vibemeter-ai-engagement-n2r8.onrender.com)
+
+---
+
 ## 🚀 Quick Start
 
 ### 1. Backend Setup
