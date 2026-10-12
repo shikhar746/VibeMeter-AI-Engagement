@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import './App.css';
 
-const API_BASE_URL = "http://127.0.0.1:8000";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
 
 function App() {
   // ── Employee chat state ────────────────────────────────────
@@ -49,6 +49,20 @@ function App() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleEndChat = async () => {
+    if (employeeId) {
+      try {
+        await axios.post(`${API_BASE_URL}/end_chat/${employeeId}`);
+      } catch (err) {
+        console.warn("Could not end chat session on backend", err);
+      }
+    }
+    setIsChatActive(false);
+    setMessages([]);
+    setEmployeeId("");
+    setUserInput("");
   };
 
   const handleSendMessage = async (e) => {
@@ -135,6 +149,7 @@ function App() {
         </h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <button
+            id="hr-portal-btn"
             className="hr-login-btn"
             onClick={() => setShowHrModal(true)}
             title="HR Portal"
@@ -149,7 +164,7 @@ function App() {
         {!isChatActive ? (
           <div className="admin-panel">
             <p className="section-label">Admin Controls</p>
-            <button className="outreach-btn" onClick={handleTriggerOutreach}>
+            <button id="trigger-outreach-btn" className="outreach-btn" onClick={handleTriggerOutreach}>
               <span className="btn-icon">⚡</span>
               Trigger Daily Data Load
             </button>
@@ -158,13 +173,14 @@ function App() {
             <p className="login-hint">Enter an Employee ID from your CSV to begin a session</p>
             <div className="input-row">
               <input
+                id="employee-id-input"
                 className="emp-input"
                 value={employeeId}
                 onChange={(e) => setEmployeeId(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleStartChat()}
                 placeholder="e.g. EMP0345"
               />
-              <button className="start-btn" onClick={handleStartChat} disabled={isLoading}>
+              <button id="start-chat-btn" className="start-btn" onClick={handleStartChat} disabled={isLoading}>
                 {isLoading ? "Loading…" : "Start Chat →"}
               </button>
             </div>
@@ -181,6 +197,14 @@ function App() {
                 </div>
               </div>
               <div className="emp-tag">{employeeId}</div>
+              <button
+                id="end-chat-btn"
+                className="close-chat-btn"
+                onClick={handleEndChat}
+                title="End Conversation & Exit"
+              >
+                ✕
+              </button>
             </div>
 
             <div className="messages-area">
@@ -208,13 +232,14 @@ function App() {
             <div className="input-area">
               <form className="input-form" onSubmit={handleSendMessage}>
                 <input
+                  id="chat-message-input"
                   className="chat-input"
                   value={userInput}
                   onChange={(e) => setUserInput(e.target.value)}
                   placeholder="Share how you're feeling…"
                   disabled={isLoading}
                 />
-                <button className="send-btn" type="submit" disabled={isLoading || !userInput.trim()}>
+                <button id="send-message-btn" className="send-btn" type="submit" disabled={isLoading || !userInput.trim()}>
                   ↑
                 </button>
               </form>

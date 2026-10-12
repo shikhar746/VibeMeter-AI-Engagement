@@ -1,5 +1,3 @@
-# question_bank.py
-
 QUESTION_BANK = {
     # Category 1: Work-Life Balance
     "Average_Work_Hours": {
@@ -38,7 +36,7 @@ QUESTION_BANK = {
         "primary": "Feedback is crucial for us to support you. How would you describe the guidance and feedback you're currently receiving from your manager?",
         "follow_up": "Do you feel you have enough 1-on-1 time to discuss your progress and any roadblocks you're facing?"
     },
-    
+
     # Generic fallback based on Vibemeter
     "Average_Vibe_Score": {
         "primary": "I've noticed your recent vibe check-ins haven't been the highest. I just wanted to reach out and see how you're truly doing. What's been on your mind lately?",
@@ -46,12 +44,13 @@ QUESTION_BANK = {
     }
 }
 
-def get_general_opening(employee_id: str) -> dict:
+
+def get_general_opening() -> dict:
     return {
         "issue": "general",
         "bot_reply": (
-            f"Hi! I'm TIA, your People Experience assistant. "
-            f"I just wanted to check in and see how things are going for you at work lately. "
-            f"How have you been feeling overall?"
+            "Hi! I'm TIA, your People Experience assistant. "
+            "I just wanted to check in and see how things are going for you at work lately. "
+            "How have you been feeling overall?"
         ),
     }
