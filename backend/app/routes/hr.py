@@ -1,9 +1,10 @@
 import os
 from typing import Optional
-from fastapi import APIRouter, HTTPException, Header
+from fastapi import APIRouter, HTTPException, Header, Request
 
 import app.database as db
 from app.config import HR_PASSWORD
+from app.limiter import global_key, limiter
 from app.models.hr import HrLoginRequest
 from app.services.hr_service import verify_hr_token
 
@@ -11,17 +12,20 @@ router = APIRouter(tags=["HR"])
 
 
 @router.post("/auth/hr/login")
-async def hr_login(request: HrLoginRequest):
+@limiter.limit("5/minute")
+@limiter.limit("30/minute", key_func=global_key)
+async def hr_login(request: Request, body: HrLoginRequest):
     """
     Validates the HR password against the HR_PASSWORD environment variable.
+    Rate limited to slow down password guessing.
     """
     hr_password = os.getenv("HR_PASSWORD", HR_PASSWORD)
     if not hr_password:
         raise HTTPException(status_code=500, detail="HR_PASSWORD not configured on server.")
-    if request.password != hr_password:
+    if body.password != hr_password:
         raise HTTPException(status_code=401, detail="Incorrect password.")
 
-    return {"status": "success", "role": "hr", "token": request.password}
+    return {"status": "success", "role": "hr", "token": body.password}
 
 
 @router.get("/dashboard/employees")

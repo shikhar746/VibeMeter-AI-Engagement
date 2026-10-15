@@ -10,10 +10,21 @@ logger = logging.getLogger(__name__)
 
 
 def analyze_and_check_escalation(state: ChatState) -> ChatState:
-    latest_msg = state["messages"][-1] if state.get("messages") else ""
-    response = get_llm().invoke(get_risk_assessment_messages(latest_msg))
-    is_critical = "YES" in response.content.strip().upper()
-    return {**state, "escalate_to_hr": state.get("escalate_to_hr", False) or is_critical}
+    if state.get("escalate_to_hr"):                       # sticky
+        return state
+    window = "\n".join(state.get("messages", [])[-6:])    # last few turns, not just one message
+    try:
+        answer = get_llm().invoke(get_risk_assessment_messages(window)).content.strip().upper()
+        is_critical = answer.startswith("YES")            # not `"YES" in answer`
+        summary = None
+    except Exception:
+        logger.exception("Risk check failed, failing safe")
+        is_critical = True                                # a human looks, instead of nobody
+        summary = "Automated risk check unavailable. Manual review needed."
+    out = {**state, "escalate_to_hr": is_critical}
+    if summary:
+        out["vibe_summary"] = summary
+    return out
 
 
 def generate_bot_reply(state: ChatState) -> ChatState:

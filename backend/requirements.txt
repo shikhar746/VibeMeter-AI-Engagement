@@ -12,3 +12,6 @@ motor>=3.5.1
 # --- AI & LangChain Ecosystem ---
 langchain-groq>=0.1.0
 langgraph>=0.2.0
+
+# --- Rate limiting ---
+slowapi>=0.1.10

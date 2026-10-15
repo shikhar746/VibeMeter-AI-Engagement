@@ -1,12 +1,13 @@
 from langchain_core.messages import SystemMessage, HumanMessage
 
 
-def get_risk_assessment_messages(latest_msg: str):
+def get_risk_assessment_messages(conversation: str):
     system_prompt = SystemMessage(content=(
-        "You are a Risk Assessment AI. Analyze the employee feedback for severe "
-        "distress, harassment, or workplace toxicity. Reply ONLY with 'YES' or 'NO'."
+        "You are a Risk Assessment AI. Read the recent conversation and decide whether the "
+        "employee shows severe distress, harassment, or workplace toxicity. "
+        "Reply with exactly one word: YES or NO."
     ))
-    human_prompt = HumanMessage(content=f"Feedback: {latest_msg}")
+    human_prompt = HumanMessage(content=f"Recent conversation:\n{conversation}")
     return [system_prompt, human_prompt]
 
 
@@ -18,7 +19,7 @@ def get_multi_topic_reply_messages(
     latest_message: str,
 ):
     system_prompt = SystemMessage(content=(
-        "You are an empathetic Deloitte HR Assistant analyzing an ongoing check-in conversation.\n\n"
+        "You are an empathetic HR check-in assistant analyzing an ongoing check-in conversation.\n\n"
         f"Topics still to explore: {remaining_topics}\n"
         f"Topics already covered: {covered_topics}\n"
         f"Primary concern category: {primary_driver}\n\n"

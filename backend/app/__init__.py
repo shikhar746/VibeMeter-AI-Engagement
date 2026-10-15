@@ -1,1 +1,1 @@
-# Deloitte VibeMeter Application Package
+# VibeMeter Application Package

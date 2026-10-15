@@ -15,6 +15,9 @@ services:
         sync: false
       - key: ENGAGEMENT_CSV_PATH
         value: data/engagement_results.csv
+      # Browser origin(s) allowed by CORS (comma-separated, with https://)
+      - key: FRONTEND_ORIGIN
+        value: https://vibemeter-ai-engagement-1.onrender.com
 
   # Frontend React Static Site
   - type: web

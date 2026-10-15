@@ -5,8 +5,11 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 from app.config import ENGAGEMENT_CSV_PATH
+from app.limiter import limiter
 from app.database import connect_db, close_db, employees
 from app.services.shap_service import parse_shap_string
 from app.routes import api_router
@@ -45,14 +48,23 @@ async def lifespan(app: FastAPI):
     await close_db()
 
 
-app = FastAPI(title="Deloitte VibeMeter API", lifespan=lifespan)
+app = FastAPI(title="VibeMeter API", lifespan=lifespan)
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+ORIGINS = [
+    o.strip()
+    for o in os.getenv("FRONTEND_ORIGIN", "http://localhost:5173,http://127.0.0.1:5173").split(",")
+    if o.strip()
+]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ORIGINS,
     allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type", "X-HR-Token"],
 )
 
 app.include_router(api_router)

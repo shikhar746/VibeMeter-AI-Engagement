@@ -102,7 +102,11 @@ function App() {
       setHrPassword("");
       fetchHrDashboard(token);
     } catch (error) {
-      setHrError(error.response?.data?.detail || "Incorrect password. Please try again.");
+      if (error.response?.status === 429) {
+        setHrError("Too many attempts. Please wait a minute and try again.");
+      } else {
+        setHrError(error.response?.data?.detail || "Incorrect password. Please try again.");
+      }
     } finally {
       setIsHrLoading(false);
     }

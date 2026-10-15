@@ -1,13 +1,17 @@
-from fastapi import APIRouter, HTTPException
+import logging
+
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
 
 import app.database as db
+from app.limiter import global_key, limiter
 from app.data.question_bank import QUESTION_BANK, get_general_opening
 from app.agent import chat_engine, ChatState
 from app.models.chat import ChatRequest
 from app.services.shap_service import get_opening_question
 from app.services.chat_service import build_agent_input
 
+logger = logging.getLogger(__name__)
 router = APIRouter(tags=["Chat"])
 
 
@@ -51,13 +55,15 @@ async def start_chat(employee_id: str):
 
 
 @router.post("/chat")
-async def chat_with_bot(request: ChatRequest):
-    emp_id = request.employee_id
+@limiter.limit("20/minute")
+@limiter.limit("200/minute", key_func=global_key)
+async def chat_with_bot(request: Request, body: ChatRequest):
+    emp_id = body.employee_id
     state = await db.conversations.find_one({"employee_id": emp_id}, {"_id": 0})
     if not state:
         raise HTTPException(status_code=400, detail="Session not initialized. Call /start_chat first.")
 
-    state["messages"].append(f"Employee: {request.message}")
+    state["messages"].append(f"Employee: {body.message}")
 
     try:
         agent_input = build_agent_input(state)
@@ -86,10 +92,12 @@ async def chat_with_bot(request: ChatRequest):
         }
 
     except Exception:
-        return {
-            "bot_reply": "I'm having a bit of trouble right now. Please try again in a moment.",
-            "escalated": False,
-        }
+        # Do not hide outages behind a friendly 200 with escalated=False.
+        logger.exception("Chat failed for employee %s", emp_id)
+        raise HTTPException(
+            status_code=503,
+            detail="I'm having a bit of trouble right now. Please try again in a moment.",
+        )
 
 
 @router.post("/end_chat/{employee_id}")

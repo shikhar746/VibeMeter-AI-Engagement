@@ -5,6 +5,8 @@
 
 VibeMeter closes the gap between predictive HR analytics and actual human follow-up. An upstream ML model flags employees who may be disengaged and explains *why* using SHAP feature attributions. VibeMeter takes those results and starts a short, empathetic check-in with each employee through **TIA**, the People Experience assistant. Questions are tailored to the biggest driver of that employee's risk score, and anything serious is escalated to HR.
 
+> **Scope:** the SHAP risk scores come from an upstream model and are supplied as a CSV. This project builds everything after that: the check-in agent, escalation logic, persistence and the HR dashboard.
+
 ---
 
 ## 🌐 Live Deployments
@@ -149,6 +151,7 @@ Open [http://localhost:5173](http://localhost:5173). The frontend calls `VITE_AP
 | `MONGODB_DB` | Database name | `vibemeter` |
 | `HR_PASSWORD` | Password for the HR portal and dashboard | *(required for HR features)* |
 | `ENGAGEMENT_CSV_PATH` | Path to the SHAP engagement CSV, relative to `backend/` | `data/engagement_results.csv` |
+| `FRONTEND_ORIGIN` | Browser origin(s) allowed by CORS, comma-separated, including `https://` | `http://localhost:5173,http://127.0.0.1:5173` |
 
 **Frontend** (`frontend/.env`, optional):
 
@@ -248,10 +251,10 @@ Once the services are connected, pushing to `main` triggers automatic redeploys.
 ## ⚠️ Known Limitations
 
 - **Simple HR auth**: the HR token *is* the password, sent in a header. Replace it with signed JWTs before any real use.
-- **Unprotected endpoints**: `/trigger_outreach`, `/start_chat`, `/chat`, `/end_chat` and `/generate_daily_report` don't require authentication, and employee IDs aren't validated or verified.
-- **Open CORS**: `allow_origins=["*"]` should be restricted to the frontend's origin, especially because this app handles sensitive wellbeing data.
+- **Unprotected endpoints**: `/trigger_outreach`, `/start_chat`, `/chat`, `/end_chat` and `/generate_daily_report` don't require authentication, and employee IDs aren't validated or verified. `/chat` and `/auth/hr/login` are rate limited (20/min and 5/min per IP, plus a global cap), which slows abuse but is not authentication.
+- **CORS** is limited to `FRONTEND_ORIGIN` and to the methods and headers the app uses. Set it on every deployment.
 - **Ephemeral report file**: `hr_daily_report.json` is written to the server's local disk, which Render wipes on every deploy and restart.
-- **LLM-based risk check**: escalation depends on a single YES/NO LLM classification. It can produce false positives and false negatives and doesn't replace human judgement.
+- **LLM-based risk check**: escalation depends on a single YES/NO LLM classification over the last few messages. It can produce false positives and false negatives and doesn't replace human judgement. If the check itself fails (for example the LLM is down), the conversation is escalated for manual review instead of being missed, so an outage can over-flag people.
 
 ---
 
